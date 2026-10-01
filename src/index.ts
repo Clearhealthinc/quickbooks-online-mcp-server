@@ -6,6 +6,7 @@ import { QuickbooksMCPServer } from "./server/qbo-mcp-server.js";
 // import { CreateCustomerTool } from "./tools/create-customer.tool.js";
 import { CreateInvoiceTool } from "./tools/create-invoice.tool.js";
 import { RegisterTool } from "./helpers/register-tool.js";
+import { installIntuitTidLogging } from "./helpers/intuit-tid.js";
 import { ReadInvoiceTool } from "./tools/read-invoice.tool.js";
 import { SearchInvoicesTool } from "./tools/search-invoices.tool.js";
 import { UpdateInvoiceTool } from "./tools/update-invoice.tool.js";
@@ -205,6 +206,8 @@ import { GetVendorExpensesTool } from "./tools/get-vendor-expenses.tool.js";
 import { GetVendorBalanceTool } from "./tools/get-vendor-balance.tool.js";
 
 const main = async () => {
+  // Clear Health fork: log intuit_tid on every failed QuickBooks call.
+  installIntuitTidLogging();
   // Create an MCP server
   const server = QuickbooksMCPServer.GetServer();
   // Add tools for customers

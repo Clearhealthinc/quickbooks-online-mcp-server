@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import open from 'open';
+import { discoverEndpoints } from '../helpers/intuit-discovery.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -222,6 +223,11 @@ export class QuickbooksClient {
     refresh_token?: string;
     x_refresh_token_expires_in?: number;
   }> {
+    // Clear Health fork: endpoints from Intuit's discovery document, not the
+    // library's hardcoded defaults. A discovery failure is transient (not an
+    // auth invalidation), so the caller keeps the refresh token and retries.
+    // setAuthorizeURLs exists in intuit-oauth's JS but is missing from its typings.
+    (this.oauthClient as unknown as { setAuthorizeURLs(p: object): void }).setAuthorizeURLs(await discoverEndpoints(this.environment));
     const authResponse = await this.oauthClient.refreshUsingToken(refreshToken);
     return authResponse.token as unknown as {
       access_token: string;
