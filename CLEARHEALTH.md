@@ -12,6 +12,19 @@ What differs from upstream, and why:
 | Our own production connect flow (HTTPS redirect, CSRF `state` check) instead of the OAuth Playground | `src/cli/connect.ts`, `src/helpers/connect-flow.ts` | Questionnaire: "does not rely on the OAuth Playground" |
 | `explore` CLI: revenue accounts, products, P&L income by month, sales by product | `src/cli/explore.ts` | Find out how SaaS revenue is booked before wiring Cyrus |
 
+## What Cyrus runs: the SaaS-only server
+
+`node dist/saas-server.js` (`npm run start:saas`) is a separate entry point that registers **one tool**,
+`get_saas_revenue`. It can only return data from the two SaaS income accounts, **Monthly SaaS Fees (84)**
+and **SaaS Implementation Fees (85)**, which are hardcoded in `src/saas/saas-revenue.ts`. That covers
+monthly and per-customer totals, every SaaS invoice line, and each SaaS invoice's due date, paid/open
+status and payment dates. Non-SaaS invoice lines, other accounts, payroll, vendors, employees and bank
+data are never returned. The general server (`dist/index.js`) is for local exploration only and is
+**not** what Cyrus runs.
+
+⚠️ The QuickBooks refresh token itself is full-access (Intuit has no narrower scope). This server limits
+what Cyrus can read *through its tool*; it does not protect against someone who reads the token file.
+
 The full list of questionnaire answers and what each commits us to is on CLE-2901.
 
 ## Connect the production company (one time, and again whenever it needs re-authorizing)
