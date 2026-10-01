@@ -38,6 +38,7 @@ type MockOAuth = {
   refreshUsingToken: jest.Mock;
   createToken: jest.Mock;
   authorizeUri: jest.Mock;
+  setAuthorizeURLs: jest.Mock;
 };
 const oauthInstances: MockOAuth[] = [];
 // Shared dispatch points so tests can program responses without caring which
@@ -45,8 +46,20 @@ const oauthInstances: MockOAuth[] = [];
 const refreshDispatch = jest.fn<(token: string) => Promise<unknown>>();
 const createTokenDispatch = jest.fn<(url: string) => Promise<unknown>>();
 
+// Clear Health fork: endpoints come from Intuit's discovery document; keep these
+// tests offline by resolving it locally.
+jest.unstable_mockModule('../../../src/helpers/intuit-discovery', () => ({
+  discoverEndpoints: jest.fn(async () => ({
+    authorizeEndpoint: 'https://appcenter.intuit.com/connect/oauth2',
+    tokenEndpoint: 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer',
+    revokeEndpoint: 'https://developer.api.intuit.com/v2/oauth2/tokens/revoke',
+    userInfoEndpoint: 'https://accounts.platform.intuit.com/v1/openid_connect/userinfo',
+  })),
+}));
+
 jest.unstable_mockModule('intuit-oauth', () => {
   class MockOAuthClient {
+    setAuthorizeURLs = jest.fn();
     static scopes = { Accounting: 'com.intuit.quickbooks.accounting' };
     cfg: Record<string, unknown>;
     refreshUsingToken = jest.fn((token: string) => refreshDispatch(token));
@@ -138,6 +151,13 @@ describe('QuickbooksClient.authenticate', () => {
     expect(oauthInstances).toHaveLength(1);
     expect(oauthInstances[0].cfg.redirectUri).toBe(process.env.QUICKBOOKS_REDIRECT_URI);
     expect(callbackHandler).toBeUndefined();
+    // Clear Health fork: the refresh used endpoints from the discovery document.
+    expect(oauthInstances[0].setAuthorizeURLs).toHaveBeenCalledWith(
+      expect.objectContaining({ tokenEndpoint: 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer' }),
+    );
+    expect(oauthInstances[0].setAuthorizeURLs.mock.invocationCallOrder[0]).toBeLessThan(
+      oauthInstances[0].refreshUsingToken.mock.invocationCallOrder[0],
+    );
   });
 
   it('falls back to the interactive OAuth flow when the refresh token is rejected, and uses the localhost redirect', async () => {

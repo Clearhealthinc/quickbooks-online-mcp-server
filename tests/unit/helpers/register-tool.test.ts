@@ -170,11 +170,11 @@ describe("unsupported parameter reporting", () => {
 
   it("names an unsupported parameter in the response", async () => {
     const { result } = await runRegistered(
-      "create_invoice",
+      "get_invoice",
       z.object({ customer_ref: z.string() }),
       { customer_ref: "1", ship_date: "2026-09-01" }
     );
-    expect(result.content[0].text).toContain("create_invoice does not support");
+    expect(result.content[0].text).toContain("get_invoice does not support");
     expect(result.content[0].text).toContain("ship_date");
     expect(result.content[0].text).toContain("customer_ref"); // lists what IS supported
     expect(result.content[1].text).toBe("ok"); // original response preserved

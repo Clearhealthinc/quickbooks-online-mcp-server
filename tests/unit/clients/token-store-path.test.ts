@@ -39,8 +39,20 @@ jest.unstable_mockModule('fs', () => ({
 let tokenCounter = 0;
 const refreshDispatch = jest.fn<(token: string) => Promise<unknown>>();
 
+// Clear Health fork: endpoints come from Intuit's discovery document; keep these
+// tests offline by resolving it locally.
+jest.unstable_mockModule('../../../src/helpers/intuit-discovery', () => ({
+  discoverEndpoints: jest.fn(async () => ({
+    authorizeEndpoint: 'https://appcenter.intuit.com/connect/oauth2',
+    tokenEndpoint: 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer',
+    revokeEndpoint: 'https://developer.api.intuit.com/v2/oauth2/tokens/revoke',
+    userInfoEndpoint: 'https://accounts.platform.intuit.com/v1/openid_connect/userinfo',
+  })),
+}));
+
 jest.unstable_mockModule('intuit-oauth', () => {
   class MockOAuthClient {
+    setAuthorizeURLs = jest.fn();
     static scopes = { Accounting: 'com.intuit.quickbooks.accounting' };
     refreshUsingToken = jest.fn((token: string) => refreshDispatch(token));
     createToken = jest.fn();

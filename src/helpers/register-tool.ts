@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ToolDefinition } from "../types/tool-definition.js";
 import { z } from "zod";
+import { isAllowedReadOnlyTool } from "./read-only.js";
 
 /**
  * Defines CRUD categories for tools
@@ -116,7 +117,10 @@ export function RegisterTool<T extends z.ZodType<any, any>>(
   server: McpServer,
   toolDefinition: ToolDefinition<T>
 ) {
-  if (isToolDisabled(toolDefinition.name)) return;
+  // Clear Health fork: a read-only ALLOWLIST replaces upstream's opt-in
+  // QUICKBOOKS_DISABLE_* check (isToolDisabled), which it makes redundant —
+  // nothing it could disable gets past this line. See read-only.ts.
+  if (!isAllowedReadOnlyTool(toolDefinition.name)) return;
 
   const known = knownParamKeys(toolDefinition.schema);
   const paramsSchema = permissiveParamsSchema(toolDefinition.schema);

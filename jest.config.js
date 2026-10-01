@@ -12,6 +12,9 @@ export default {
     'src/**/*.ts',
     '!src/**/*.d.ts',
     '!src/types/**/*.ts',
+    // Clear Health fork: thin CLI shells (network + stdin/stdout); their logic
+    // lives in src/helpers/connect-flow.ts and report-rows.ts, which are covered.
+    '!src/cli/**/*.ts',
   ],
   coverageThreshold: {
     global: {
